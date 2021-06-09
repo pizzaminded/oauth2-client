@@ -14,6 +14,11 @@
 
 namespace League\OAuth2\Client\Registration;
 
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\ClientInterface as HttpClientInterface;
+use League\OAuth2\Client\Tool\RequestFactory;
+use Psr\Http\Message\RequestInterface;
+
 /**
  * @link https://tools.ietf.org/html/rfc7591
  */
@@ -31,16 +36,29 @@ class ClientRegistration
     protected $options;
 
     /**
+     * @var RequestFactory
+     */
+    protected $requestFactory;
+
+    /**
+     * @var HttpClientInterface
+     */
+    protected $httpClient;
+
+    /**
      * @param array $options
      */
     public function __construct(array $options = [])
     {
-        if(empty($options['endpoint'])) {
+        if (empty($options['endpoint'])) {
             throw new \InvalidArgumentException('"endpoint" option is required.');
         }
 
-        $this->endpoint = $options['missing'];
+        $this->endpoint = $options['endpoint'];
         $this->options = $options;
+
+        $this->requestFactory = new RequestFactory();
+        $this->httpClient = new HttpClient();
     }
 
     /**
@@ -49,7 +67,34 @@ class ClientRegistration
      */
     public function register(ClientMetadata $metadata, $initialAccessToken = null)
     {
+        $payload = [
+            'redirect_uris'=> $metadata->getRedirectUris()
+        ];
 
+        $headers = [];
+        $headers['Content-Type'] = 'application/json';
+        if($initialAccessToken !== null) {
+            $headers['Authorization']  = $initialAccessToken;
+        }
+
+        $request = $this->getClientRegistrationRequest($this->endpoint, $payload, $headers);
+        $response = $this->getParsedResponse($request);
+
+        return new ClientInformation($response);
+
+    }
+
+    protected function getClientRegistrationRequest($endpoint, array $payload, array $headers = [])
+    {
+        return $this->requestFactory->getRequest('POST', $endpoint, $headers, json_encode($payload));
+    }
+
+    protected function getParsedResponse(RequestInterface $request)
+    {
+        $response = $this->httpClient->send($request);
+        $body = (string)$response->getBody();
+
+        return json_decode($body, true);
     }
 
 }

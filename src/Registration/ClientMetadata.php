@@ -14,6 +14,8 @@
 
 namespace League\OAuth2\Client\Registration;
 
+use InvalidArgumentException;
+
 /**
  * @link https://tools.ietf.org/html/rfc7591#section-2
  */
@@ -26,9 +28,9 @@ class ClientMetadata
     protected $internationalizedMetadata = [];
 
     /**
-     * @var array
+     * @var string[]
      */
-    protected $redirectUrls = [];
+    protected $redirectUris = [];
 
     /**
      * @var string
@@ -75,32 +77,34 @@ class ClientMetadata
      */
     public function __construct(array $options = [])
     {
-        if (!empty($options['redirect_urls'])) {
-            $this->redirectUrls = $options['redirect_urls'];
+        if (empty($options['redirectUris'])) {
+            throw new InvalidArgumentException('Required option not passed: "redirectUris"');
         }
 
-        if (!empty($options['token_endpoint_auth_method'])) {
-            $this->tokenEndpointAuthMethod = $options['token_endpoint_auth_method'];
+        $this->redirectUris = $options['redirectUris'];
+
+        if (!empty($options['tokenEndpointAuthMethod'])) {
+            $this->tokenEndpointAuthMethod = $options['tokenEndpointAuthMethod'];
         }
 
-        if (!empty($options['grant_types'])) {
-            $this->grantTypes = $options['grant_types'];
+        if (!empty($options['grantTypes'])) {
+            $this->grantTypes = $options['grantTypes'];
         }
 
-        if (!empty($options['response_types'])) {
-            $this->responseTypes = $options['response_types'];
+        if (!empty($options['responseTypes'])) {
+            $this->responseTypes = $options['responseTypes'];
         }
 
-        if (!empty($options['client_name'])) {
-            $this->clientName = $options['client_name'];
+        if (!empty($options['clientName'])) {
+            $this->clientName = $options['clientName'];
         }
 
-        if (!empty($options['client_uri'])) {
-            $this->clientUri = $options['client_uri'];
+        if (!empty($options['clientUri'])) {
+            $this->clientUri = $options['clientUri'];
         }
 
-        if (!empty($options['logo_uri'])) {
-            $this->logoUri = $options['logo_uri'];
+        if (!empty($options['logoUri'])) {
+            $this->logoUri = $options['logoUri'];
         }
 
         if (!empty($options['scope'])) {
@@ -123,14 +127,6 @@ class ClientMetadata
     public function getInternationalizedMetadata()
     {
         return $this->internationalizedMetadata;
-    }
-
-    /**
-     * @return array
-     */
-    public function getRedirectUrls()
-    {
-        return $this->redirectUrls;
     }
 
     /**
@@ -197,5 +193,11 @@ class ClientMetadata
         return $this->contacts;
     }
 
-
+    /**
+     * @return string[]
+     */
+    public function getRedirectUris()
+    {
+        return $this->redirectUris;
+    }
 }
